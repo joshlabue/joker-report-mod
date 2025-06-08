@@ -30,3 +30,8 @@ Install Steps:
                 - JokerReport.json
                 - main.lua
 
+## Game Logs
+Game logs are accessible in the joker_report folder in Balatro's data folder, next to the Mods folder.
+- Windows: `%AppData%/Balatro/joker_report`
+- macOS: `~/Library/Application Support/Balatro/joker_report`
+- Linux (proton): `~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro`
