@@ -15,12 +15,12 @@ Install Steps:
 2. Follow the [install steps for Steamodded](https://github.com/Steamodded/smods/wiki#how-to-install-steamodded)
 3. Install Joker Report
     - Without Git (recommended):
-        - [Download a zip(https://github.com/joshlabue/joker-report-mod/archive/refs/heads/main.zip)] of the repository
+        - [Download a zip](https://github.com/joshlabue/joker-report-mod/archive/refs/heads/main.zip) of the repository
         - Extract the zip into Balatro's mods folder
     - With Git:
         - Clone the repo into Balatro's mods folder:
-
-            `git clone https://github.com/joshlabue/joker-report-mod.git`
+            
+                git clone https://github.com/joshlabue/joker-report-mod.git
 4. Once installed, the mod should be in a folder called joker-report-mod (or something similar, the name does not need to exactly match), something like this:
     - Balatro
         - steam_autocloud.vdf
