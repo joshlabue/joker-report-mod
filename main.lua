@@ -1,5 +1,6 @@
 local joker_report_save_directory = "joker_report"
 
+local jr_version = "0.0.0"
 local game_in_progress = false
 local round_in_progress = false
 local most_recent_hand = "" 
@@ -264,6 +265,7 @@ function G.FUNCS:start_setup_run(e)
         current_run_id = jr_generate_game_id() 
         file_handle = nil
         jr_log_action("ID " .. current_run_id) 
+        jr_log_action("VERSION " .. VERSION .. " " .. jr_version)
         -- jr_log_action("NEW " .. G.GAME.selected_back.name)
     end
 
