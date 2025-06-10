@@ -153,6 +153,13 @@ end
 local hooked_eval_play = G.FUNCS.evaluate_play
 function G.FUNCS:evaluate_play(e)
     local cards = G.play.cards
+
+    local joker_order = "JOKERORDER"
+    for i=1, #G.jokers.cards do
+        joker_order = joker_order .. " " .. G.jokers.cards[i].ID
+    end
+    jr_log_action(joker_order)
+
     for i=1, #G.play.cards do
 
         local card = G.play.cards[i]
