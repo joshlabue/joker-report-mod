@@ -192,6 +192,7 @@ function highlight_card(card, percent, dir)
     return base_call
 end
 
+local consumables_used = 0
 local hooked_use_consumable = Card.use_consumeable
 function Card:use_consumeable(area, copier)
 
@@ -206,6 +207,8 @@ function Card:use_consumeable(area, copier)
         cards_before[i].id = card.ID
     end
 
+    local consumable_id = consumables_used
+    consumables_used = consumables_used + 1
     local base_call = hooked_use_consumable(self, area, copier)
 
     G.E_MANAGER:add_event(Event({
@@ -240,25 +243,25 @@ function Card:use_consumeable(area, copier)
             for i=1, #cards_before do
                 local before = cards_before[i]
                 if not before.matched then
-                    jr_log_action("-CARD " .. before.value .. " " .. before.id)
+                    jr_log_action("-CARD " .. before.value .. " " .. before.id .. " " .. consumable_id)
                 end
             end
 
             for i=1, #cards_after do
                 local after = cards_after[i]
                 if not after.matched then
-                    jr_log_action("+CARD " .. after.value .. " " .. after.id)
+                    jr_log_action("+CARD " .. after.value .. " " .. after.id .. " " .. consumable_id)
                 end
             end
 
-            jr_log_action("CONSUME END")            
+            jr_log_action("CONSUME END" .. " " .. consumable_id)            
             
             return true
         end,
         blocking = false
     }))
 
-    jr_log_action("CONSUME START " .. self.ability.name)
+    jr_log_action("CONSUME START " .. consumable_id .. " " .. self.ability.name)
 end
 
 local hooked_start_setup_run = G.FUNCS.start_setup_run
@@ -387,6 +390,18 @@ function CardArea:remove_card(card, discarded_only)
 
     return base_call
 end
+
+local hooked_card_redeem = Card.redeem
+function Card:redeem()
+    local base_call = hooked_card_redeem(self)
+
+    if self.ability and self.ability.name then
+        jr_log_action("REDEEM " .. self.ability.name)
+    end
+
+        return base_call
+end
+
 
 
 function jr_set_seed(seed, forced)
