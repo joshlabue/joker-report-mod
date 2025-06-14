@@ -146,7 +146,12 @@ function jr_serialize_playing_card(card)
         end
     end
 
-    return value_char .. suit_char .. ability_char .. edition_char .. seal
+    local debuff = "."
+    if(card.debuff) then
+        debuff = "_"
+    end
+
+    return value_char .. suit_char .. ability_char .. edition_char .. seal .. debuff
 end
 
 
@@ -186,7 +191,7 @@ function highlight_card(card, percent, dir)
     local base_call = hooked_highlight_card(card, percent, dir)
 
     if(dir == 'up') then
-        jr_log_action("CARDSCORED " .. jr_serialize_playing_card(card) .. " " .. card.ID)
+       jr_log_action("CARDSCORED " .. jr_serialize_playing_card(card) .. " " .. card.ID)
     end
 
     return base_call
