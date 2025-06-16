@@ -29,7 +29,7 @@ Install Steps:
             - joker-report-mod
                 - JokerReport.json
                 - main.lua
-5. Verify that achievements are ENALBED in the mod menu's settings!
+5. Verify that achievements are ENABLED in the mod menu's settings!
    
 ## Game Logs
 Game logs are accessible in the joker_report folder in Balatro's data folder, next to the Mods folder.
