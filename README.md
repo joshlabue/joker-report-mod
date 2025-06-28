@@ -1,7 +1,6 @@
 # Joker Report
-**If you are not a tester, do not bother installing the mod. You will not be able to use it - the logging format is subject to change and no guarantees are made that logs will work upon release.**
 
-Joker Report is currently under development. While the mod is open source, game sharing is not currently publicly available.
+Joker Report is currently under development. While the mod is open source, the game sharing feature is not currently publicly available.
 
 A read-only development server is available at https://dev.joker.report.
 
