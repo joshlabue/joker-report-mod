@@ -21,7 +21,7 @@ local file_handle
 function jr_log_action(action)
 
     if current_run_id == nil then
-        print("Failed to log action: no run id")
+        print("Failed to log action: " .. action)
         return
     end
 
@@ -154,6 +154,45 @@ function jr_serialize_playing_card(card)
     return value_char .. suit_char .. ability_char .. edition_char .. seal .. debuff
 end
 
+
+function serialize_joker_modifiers(card)
+    
+    local edition = "."
+    if card.edition then
+        if card.edition.foil then
+            edition = "F"
+        elseif card.edition.holo then
+            edition = "H"
+        elseif card.edition.polychrome then
+            edition = "P"
+        elseif card.edition.negative then
+            edition = "N"
+        end 
+    end
+
+    --            | Rental | Not Rental 
+    -- Eternal    |   e    |    E
+    -- Perishable |   p    |    P
+    -- None       |   r    |    .
+    local sticker = "."
+    if card.ability.eternal then 
+        if card.ability.rental then
+            sticker = "E"
+        else
+            sticker = "e"
+        end
+    elseif card.ability.perishable then
+        if card.ability.rental then
+            sticker = "P"
+        else
+            sticker = "P"
+        end
+    elseif card.ability.rental then
+        sticker = 'r'
+    end
+
+    return edition .. sticker
+end
 
 local hooked_eval_play = G.FUNCS.evaluate_play
 function G.FUNCS:evaluate_play(e)
@@ -383,6 +422,10 @@ function CardArea:emplace(card, location, stay_flipped)
     local base_call = hooked_card_area_emplace(self, card, location, stay_flipped)
     if G.jokers == self then
         jr_log_action("+JOKER " .. card.ability.name .. " " .. card.ID)
+        local modifiers = serialize_joker_modifiers(card) 
+        if modifiers ~= ".." then 
+            jr_log_action("JOKERMODIFIER " .. card.ID .. " " .. modifiers)
+        end
     end
 end
 
@@ -394,6 +437,14 @@ function CardArea:remove_card(card, discarded_only)
     end
 
     return base_call
+end
+
+local hooked_set_edition = Card.set_edition
+function Card:set_edition(edition, immediate, silent)
+    local base_call = hooked_set_edition(self, edition, immediate, silent)
+    if self.parent == G.jokers then
+        jr_log_action("JOKERMODIFIER " .. self.ID .. " " .. serialize_joker_modifiers(self))
+    end
 end
 
 local hooked_card_redeem = Card.redeem
