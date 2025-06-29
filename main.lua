@@ -177,13 +177,13 @@ function serialize_joker_modifiers(card)
     local sticker = "."
     if card.ability.eternal then 
         if card.ability.rental then
-            sticker = "E"
-        else
             sticker = "e"
+        else
+            sticker = "E"
         end
     elseif card.ability.perishable then
         if card.ability.rental then
-            sticker = "P"
+            sticker = "p"
         else
             sticker = "P"
         end
