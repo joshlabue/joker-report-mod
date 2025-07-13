@@ -1,8 +1,8 @@
 # Joker Report
 
-Joker Report is currently under development. While the mod is open source, the game sharing feature is not currently publicly available.
+Joker Report is currently in beta! Game crashes are possible and no warranty comes with this mod!
 
-A read-only development server is available at https://dev.joker.report.
+The beta site is available at https://dev.joker.report.
 
 ## Installation
 Requirements:
