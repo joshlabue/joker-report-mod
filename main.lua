@@ -1,6 +1,6 @@
 local joker_report_save_directory = "joker_report"
 
-local jr_version = "0.0.0"
+local jr_version = "0.0.1"
 local game_in_progress = false
 local round_in_progress = false
 local most_recent_hand = "" 
@@ -17,7 +17,7 @@ function jr_generate_game_id()
     end)
 end
 
-local file_handle
+local log_queue = {}
 function jr_log_action(action)
 
     if current_run_id == nil then
@@ -25,30 +25,8 @@ function jr_log_action(action)
         return
     end
 
-    print("Joker Report action logged: " .. action)
-
-   if not file_handle then
-       if not love.filesystem.exists(joker_report_save_directory) then
-           local result = love.filesystem.createDirectory(joker_report_save_directory)
-           if not result then
-               print("Failed to create directory: " .. joker_report_save_directory)
-               return
-           end
-       end
-
-       local file_name = joker_report_save_directory .. "/" .. current_run_id .. ".jokerreport"
-       if not love.filesystem.exists(file_name) then
-           file_handle = love.filesystem.newFile(file_name)
-           file_handle:open("w")
-       else
-           file_handle = love.filesystem.newFile(file_name)
-           file_handle:open("a")
-       end
-
-       print("Joker Report file opened: " .. file_name)
-   end 
-
-   file_handle:write(action .. "\n")
+    print("Joker Report action queued: " .. action)
+    table.insert(log_queue, action)
 end
 
 local hooked_generate_starting_seed = generate_starting_seed
@@ -202,7 +180,10 @@ function G.FUNCS:evaluate_play(e)
     for i=1, #G.jokers.cards do
         joker_order = joker_order .. " " .. G.jokers.cards[i].ID
     end
-    jr_log_action(joker_order)
+
+    if #G.jokers.cards > 0 then
+        jr_log_action(joker_order)
+    end
 
     for i=1, #G.play.cards do
 
@@ -312,15 +293,25 @@ local hooked_start_setup_run = G.FUNCS.start_setup_run
 function G.FUNCS:start_setup_run(e)
     local base_call = hooked_start_setup_run(self, e)
 
+    local run_id_file_name = joker_report_save_directory .. "/" .. ".joker_report_run_id"
+
     if G.SETTINGS.current_setup == 'Continue' then
         print("CONTINUE")
-        print("ID orphan")
+        log_queue = {}
+        current_run_id = get_saved_run_id()
+        if current_run_id then
+            print("Continuing run with ID: " .. current_run_id)
+            sync = true
+        end
+
     elseif G.SETTINGS.current_setup == 'New Run' then
         current_run_id = jr_generate_game_id() 
         file_handle = nil
         jr_log_action("ID " .. current_run_id) 
         jr_log_action("VERSION " .. VERSION .. " " .. jr_version)
         -- jr_log_action("NEW " .. G.GAME.selected_back.name)
+
+        save_run_id()       
     end
 
     local _seed = G.run_setup_seed and G.setup_seed or G.forced_seed or nil
@@ -328,6 +319,29 @@ function G.FUNCS:start_setup_run(e)
         -- user specified seed
         jr_set_seed(_seed, true)
     end
+end
+
+
+function save_run_id()
+    if current_run_id then
+        local run_id_file_name = joker_report_save_directory .. "/" .. ".joker_report_run_id"
+        local file_handle = love.filesystem.newFile(run_id_file_name)
+        file_handle:open("w")
+        file_handle:write(current_run_id)
+        file_handle:close()
+    end
+end
+
+function get_saved_run_id()
+    local run_id_file_name = joker_report_save_directory .. "/" .. ".joker_report_run_id"
+    if love.filesystem.exists(run_id_file_name) then
+        local file_handle = love.filesystem.newFile(run_id_file_name)
+        file_handle:open("r")
+        local run_id = file_handle:read()
+        file_handle:close()
+        return run_id
+    end
+    return nil
 end
 
 local hooked_apply_to_run = Back.apply_to_run
@@ -342,8 +356,12 @@ local hooked_start_run = Game.start_run
 function Game:start_run(args)
     local base_call = hooked_start_run(self, args)
     round_in_progress = false;
-
+    
     jr_log_action("STAKE " .. G.GAME.stake)
+    if sync then
+        jr_queue_joker_sync()
+        sync = false
+    end
 end
 
 local hooked_skip_blind = G.FUNCS.skip_blind
@@ -468,3 +486,61 @@ function jr_set_seed(seed, forced)
     end
 end
 
+
+local file_handle
+
+local hooked_game_update = Game.update
+function Game:update(dt)
+
+    local base_call = hooked_game_update(self, dt)
+
+    save_manager_action = G.SAVE_MANAGER.channel:peek()
+
+    local can_save = true
+     if save_manager_action ~= nil and current_run_id ~= nil then 
+        if save_manager_action.type == "save_run" then
+            print("save game")
+
+            if not file_handle then
+                if not love.filesystem.exists(joker_report_save_directory) then
+                    local result = love.filesystem.createDirectory(joker_report_save_directory)
+                    if not result then
+                        print("Failed to create directory: " .. joker_report_save_directory)
+                        can_save = false
+                    end
+                end
+
+                local file_name = joker_report_save_directory .. "/" .. current_run_id .. ".jokerreport"
+                if not love.filesystem.exists(file_name) then
+                    file_handle = love.filesystem.newFile(file_name)
+                    file_handle:open("w")
+                else
+                    file_handle = love.filesystem.newFile(file_name)
+                    file_handle:open("a")
+                end
+
+                print("Joker Report file opened: " .. file_name)
+            end 
+
+            if(can_save) then
+                if #log_queue > 0 then
+                    for _, action in ipairs(log_queue) do
+                        file_handle:write(action .. "\n")
+                    end
+                end
+
+                log_queue = {}
+            end
+        end
+    end
+end
+
+
+function jr_queue_joker_sync()
+    jr_log_action("JOKERSYNC BEGIN")
+    for i=1, #G.jokers.cards do
+        local joker = G.jokers.cards[i]
+        jr_log_action("JOKERSYNC " .. joker.ID .. " " .. serialize_joker_modifiers(joker) .. " " .. joker.ability.name)
+    end
+    jr_log_action("JOKERSYNC END")
+end
