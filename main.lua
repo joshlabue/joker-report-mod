@@ -291,7 +291,6 @@ end
 
 local hooked_start_setup_run = G.FUNCS.start_setup_run
 function G.FUNCS:start_setup_run(e)
-    local base_call = hooked_start_setup_run(self, e)
 
     local run_id_file_name = joker_report_save_directory .. "/" .. ".joker_report_run_id"
 
@@ -302,9 +301,12 @@ function G.FUNCS:start_setup_run(e)
         if current_run_id then
             print("Continuing run with ID: " .. current_run_id)
             sync = true
+        else
+            print("Failed to locate existing run ID")
         end
 
     elseif G.SETTINGS.current_setup == 'New Run' then
+        print("Starting new run")
         current_run_id = jr_generate_game_id() 
         file_handle = nil
         jr_log_action("ID " .. current_run_id) 
@@ -319,6 +321,8 @@ function G.FUNCS:start_setup_run(e)
         -- user specified seed
         jr_set_seed(_seed, true)
     end
+
+    local base_call = hooked_start_setup_run(self, e)
 end
 
 
